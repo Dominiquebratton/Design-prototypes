@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create Option Sets — Prototype</title>
+<style>
+  :root{
+    --surface: #ffffff;
+    --surface-neutral: #f9f8f4;
+    --surface-neutral-medium: #edeae4;
+    --border: #e3e2dd;
+    --border-decorative: #e3e2dd;
+    --border-interactive: #bbbab6;
+    --text: #22201f;
+    --text-subdued: #62615d;
+    --text-inactive: #aaaba6;
+    --text-white: #ffffff;
+    --interactive: #1e72c4;
+    --interactive-hover: #185a99;
+    --danger: #c0392b;
+    --danger-bg: #fdecea;
+    --success: #1e824c;
+    --radius-s: 4px;
+    --radius-m: 8px;
+    --radius-l: 12px;
+    --radius-xl: 16px;
+    --s4: 4px; --s8: 8px; --s12: 12px; --s16: 16px; --s24: 24px; --s32: 32px; --s48: 48px;
+    --shadow-btn: 0px 1px 0px 0px rgba(0,0,0,0.1);
+    --shadow-btn-sec: 0px 1px 0px 0px rgba(0,0,0,0.06);
+    --shadow-modal: 0px 8px 8px 0px rgba(18,18,18,0.04), 0px 4px 4px 0px rgba(18,18,18,0.08), 0px 1px 1px 0px rgba(18,18,18,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--surface-neutral);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);}
+  .app{display:flex;align-items:flex-start;min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{width:200px;flex-shrink:0;padding:8px;display:flex;flex-direction:column;gap:12px;height:100vh;position:sticky;top:0;}
+  .brand{display:flex;align-items:center;gap:4px;padding:8px;font-weight:600;font-size:16px;}
+  .nav{flex:1;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
+  .nav-parent{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:15px;font-weight:500;}
+  .nav-child-wrap{padding-left:24px;}
+  .nav-child{padding:6px 8px;border-radius:8px;font-size:15px;color:var(--text);}
+  .nav-child.active{background:var(--surface-neutral-medium);font-weight:600;height:32px;display:flex;align-items:center;}
+  .nav-divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+  .nav-utils{display:flex;flex-direction:column;gap:4px;}
+  .nav-item-bottom{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px;font-size:15px;}
+  .profile-name{font-weight:500;font-size:15px;}
+  .profile-sub{font-size:12px;color:var(--text-subdued);}
+
+  /* Main card */
+  .main-wrap{flex:1;padding:8px 8px 8px 0;height:100vh;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;height:100%;overflow:auto;display:flex;flex-direction:column;}
+  .title-header{border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;}
+  .title-header h1{flex:1;font-size:24px;font-weight:600;margin:0;}
+  .icon-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--text-subdued);}
+  .btn-pos{height:32px;padding:4px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-weight:600;font-size:14px;box-shadow:var(--shadow-btn-sec);cursor:pointer;}
+  .tabs{padding-left:24px;display:flex;gap:16px;height:34px;align-items:center;}
+  .tab{padding:8px 0;font-size:15px;color:var(--text);cursor:pointer;}
+  .tab.active{font-weight:500;border-bottom:2px solid var(--text);}
+  .content{padding:24px;display:flex;flex-direction:column;align-items:center;gap:32px;flex:1;}
+  .content-inner{max-width:1000px;width:100%;display:flex;flex-direction:column;gap:24px;}
+  .content-header{display:flex;align-items:center;justify-content:space-between;width:100%;}
+  .content-header h2{font-size:20px;font-weight:700;margin:0;color:#111827;}
+
+  .btn{border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:12px 16px;}
+  .btn-primary{background:var(--interactive);color:var(--text-white);box-shadow:var(--shadow-btn);}
+  .btn-primary:hover{background:var(--interactive-hover);}
+  .btn-primary:disabled{background:#9fc4e6;cursor:not-allowed;}
+  .btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow-btn-sec);}
+  .btn-secondary:hover{background:var(--surface-neutral);}
+  .btn-link{background:none;border:none;color:var(--interactive);font-weight:600;font-size:14px;cursor:pointer;padding:0;}
+  .btn-link:hover{text-decoration:underline;}
+
+  /* Empty state */
+  .empty-card{background:var(--surface-neutral);border:1px solid var(--border);border-radius:8px;padding:16px;width:100%;text-align:center;}
+  .empty-card p{margin:0 0 4px;font-size:15px;line-height:24px;}
+  .empty-card .sub{color:var(--text-subdued);}
+
+  /* Option set table */
+  .option-set-block{display:flex;flex-direction:column;gap:8px;width:100%;}
+  .option-set-title{font-size:18px;font-weight:600;color:#111827;margin:0;}
+
+  .table-wrap{border:1px solid var(--border-decorative);border-radius:8px;overflow:hidden;width:100%;}
+  table.opt-table{border-collapse:collapse;width:100%;}
+  table.opt-table thead th{background:var(--surface-neutral);border-bottom:1px solid var(--border-decorative);text-align:left;font-weight:400;font-size:14px;height:40px;padding:0 12px;}
+  table.opt-table thead th .sort-arrow{color:var(--text-subdued);font-size:11px;margin-left:2px;}
+  table.opt-table tbody td{border-bottom:1px solid var(--border-decorative);border-right:1px solid var(--border-decorative);height:48px;padding:0 12px;font-size:15px;}
+  table.opt-table tbody tr:last-child td{border-bottom:none;}
+  table.opt-table td:last-child, table.opt-table th:last-child{border-right:none;}
+  table.opt-table td.drag-col, table.opt-table th.drag-col{width:45px;text-align:center;}
+  table.opt-table td.name-col{min-width:280px;}
+  table.opt-table td.price-col{min-width:120px;color:var(--text);}
+  table.opt-table td.bin-col{width:56px;text-align:center;}
+  .price-input{width:100%;height:32px;border:1px solid transparent;border-radius:6px;padding:0 6px;font-size:15px;font-family:inherit;color:var(--text);background:transparent;}
+  .price-input:hover{border-color:var(--border-interactive);}
+  .price-input:focus{outline:none;border-color:var(--interactive);background:var(--surface);}
+  .drag-handle{display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px;width:12px;margin:0 auto;cursor:grab;}
+  .drag-handle span{width:3px;height:3px;border-radius:50%;background:var(--text-inactive);}
+  .drag-handle:active{cursor:grabbing;}
+  table.opt-table tbody tr.dragging{opacity:0.4;}
+  table.opt-table tbody tr.drag-over-top td{box-shadow:inset 0 2px 0 0 var(--interactive);}
+  table.opt-table tbody tr.drag-over-bottom td{box-shadow:inset 0 -2px 0 0 var(--interactive);}
+  .bin-btn{background:none;border:none;color:var(--text-subdued);cursor:pointer;font-size:16px;width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;}
+  .bin-btn:hover{background:var(--surface-neutral);color:var(--danger);}
+
+  /* Row below table: rule tag (left) + actions (right) */
+  .table-footer-row{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:4px;}
+  .rule-tag{display:flex;align-items:stretch;font-size:12px;border-radius:4px;overflow:hidden;}
+  .rule-tag .rule-label{background:var(--surface-neutral-medium);color:var(--text);padding:6px 8px;font-weight:400;white-space:nowrap;}
+  .rule-tag .rule-value{background:#edf6ff;color:var(--text);padding:6px 8px;font-weight:500;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  .rule-tag .rule-value button{background:none;border:none;color:var(--text-subdued);cursor:pointer;font-size:11px;padding:0;line-height:1;}
+  .table-footer-actions{display:flex;gap:8px;align-items:center;}
+  .icon-link-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--interactive);font-weight:600;font-size:14px;cursor:pointer;padding:8px 8px 8px 4px;border-radius:8px;}
+  .icon-link-btn:hover{background:var(--surface-neutral);text-decoration:underline;}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(70,74,81,0.6);display:none;align-items:center;justify-content:center;z-index:50;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:12px;box-shadow:var(--shadow-modal);padding:24px;width:400px;display:flex;flex-direction:column;gap:24px;max-height:88vh;overflow:auto;}
+  .modal-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  .modal-heading h3{font-size:18px;font-weight:600;margin:0;}
+  .modal-close{background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-subdued);line-height:1;}
+  .modal-body{display:flex;flex-direction:column;gap:12px;}
+  .field{display:flex;flex-direction:column;gap:4px;width:100%;}
+  .field label{font-size:14px;font-weight:600;}
+  .field input[type=text], .field input[type=number], .field select{
+    height:40px;border:1px solid var(--border-interactive);border-radius:8px;padding:0 12px;font-size:15px;font-family:inherit;color:var(--text);width:100%;
+  }
+  .field input::placeholder{color:var(--text-inactive);}
+  .field input:focus, .field select:focus{outline:2px solid var(--interactive);outline-offset:1px;}
+  .field input:disabled{background:var(--surface-neutral);color:var(--text-inactive);cursor:not-allowed;}
+  .price-field-wrap{display:flex;align-items:center;gap:8px;height:40px;border:1px solid var(--border-interactive);border-radius:8px;padding:0 8px 0 12px;}
+  .price-field-wrap:focus-within{outline:2px solid var(--interactive);outline-offset:1px;}
+  .price-prefix{color:var(--text-subdued);font-size:15px;}
+  .field .price-field-wrap input[type=number]{border:none;height:38px;padding:0;flex:1;width:auto;}
+  .price-field-wrap input:focus{outline:none;}
+  .field.invalid .price-field-wrap{border-color:var(--danger);}
+  .field .helper{font-size:12px;color:var(--text);}
+  .field .error{font-size:12px;color:var(--danger);display:none;}
+  .field.invalid input{border-color:var(--danger);}
+  .field.invalid .error{display:block;}
+  .modal-actions{display:flex;gap:16px;}
+  .modal-actions .btn{flex:1;justify-content:center;}
+  .modal-desc{font-size:15px;line-height:24px;color:var(--text);margin:0;}
+  .rule-grid{display:flex;gap:12px;width:100%;}
+  .rule-grid .field{flex:1;}
+  .counter{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border-interactive);border-radius:8px;padding:8px;}
+  .counter button{background:none;border:none;color:var(--text);font-size:16px;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .counter button:disabled{color:var(--text-inactive);cursor:not-allowed;}
+  .counter .counter-value{font-size:15px;color:var(--text);}
+  .checkbox-card{display:flex;gap:8px;align-items:flex-start;width:100%;border:1px solid var(--border-decorative);border-radius:8px;padding:16px;cursor:pointer;background:var(--surface);}
+  .checkbox-card.checked{border-color:var(--text-subdued);}
+  .checkbox-card input[type=checkbox]{width:20px;height:20px;margin:0;accent-color:var(--interactive);flex-shrink:0;}
+  .checkbox-card .checkbox-copy{display:flex;flex-direction:column;}
+  .checkbox-card .checkbox-title{font-size:14px;font-weight:600;color:var(--text);}
+  .checkbox-card .checkbox-sub{font-size:14px;color:var(--text);}
+  .modal-danger-icon{width:40px;height:40px;border-radius:50%;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#22201f;color:white;padding:10px 16px;border-radius:8px;font-size:14px;box-shadow:var(--shadow-modal);display:none;z-index:60;}
+  .toast.show{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">Back Office ›</div>
+    <div class="nav">
+      <div class="nav-parent">🏠 Home</div>
+      <div class="nav-parent">📋 Products ⌃</div>
+      <div class="nav-child-wrap">
+        <div class="nav-child active">Product list</div>
+      </div>
+      <div class="nav-child-wrap"><div class="nav-child">Online products</div></div>
+      <div class="nav-child-wrap"><div class="nav-child">Site products</div></div>
+      <div class="nav-child-wrap"><div class="nav-child">Price lists</div></div>
+      <div class="nav-child-wrap"><div class="nav-child">Promotions</div></div>
+      <div class="nav-child-wrap"><div class="nav-child">Gift cards</div></div>
+      <div class="nav-child-wrap"><div class="nav-child">Inventory</div></div>
+      <div class="nav-child-wrap"><div class="nav-child">Wastage</div></div>
+      <div class="nav-child-wrap"><div class="nav-child">Suppliers</div></div>
+      <hr class="nav-divider"/>
+      <div class="nav-parent">📈 Reports</div>
+      <div class="nav-parent">👥 People ›</div>
+      <div class="nav-parent">▦ Discover ›</div>
+      <div class="nav-parent">👛 Financial services</div>
+      <div class="nav-parent">⚙️ Settings</div>
+    </div>
+    <div class="nav-utils">
+      <div class="nav-item-bottom">❓ Help &amp; support</div>
+      <div class="nav-item-bottom">
+        <span>👤</span>
+        <div>
+          <div class="profile-name">Poppy Belle</div>
+          <div class="profile-sub">My Coffee Company</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <div class="card">
+      <div class="title-header">
+        <h1>Products</h1>
+        <span class="icon-btn">💬</span>
+        <span class="icon-btn">📣</span>
+        <button class="btn-pos">POS</button>
+      </div>
+      <div class="tabs">
+        <div class="tab">Products</div>
+        <div class="tab">POS Categories</div>
+        <div class="tab active">Option Sets</div>
+        <div class="tab">Reporting Groups</div>
+        <div class="tab">Suppliers</div>
+        <div class="tab">Online Products</div>
+      </div>
+      <div class="content">
+        <div class="content-inner">
+          <div class="content-header">
+            <h2>Option Sets</h2>
+            <button class="btn btn-primary" id="openCreateModalBtn">Create option set</button>
+          </div>
+
+          <div class="empty-card" id="emptyState">
+            <p>There are no option sets created.</p>
+            <p class="sub">Option sets keep modifiers consistent across products. Create a set to group selectable extras like milk, toppings, or add-ons.</p>
+          </div>
+
+          <div id="optionSetsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE OPTION SET MODAL -->
+<div class="modal-overlay" id="createModalOverlay">
+  <div class="modal">
+    <div class="modal-heading">
+      <h3>Create option set</h3>
+      <button class="modal-close" data-close="createModalOverlay">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field" id="nameField">
+        <label for="setName">Option set name</label>
+        <input type="text" id="setName" placeholder="e.g Milk options" />
+        <span class="error" id="nameError">Please enter a name for this option set.</span>
+      </div>
+      <div class="field" id="valuesField">
+        <label for="setValues">Set values</label>
+        <input type="text" id="setValues" placeholder="e.g Full Cream, Almond, Skim, Oat" />
+        <span class="helper">Customers will choose from these options.</span>
+        <span class="error" id="valuesError">Add at least one value, separated by commas.</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="saveCreateBtn">Save</button>
+      <button class="btn btn-secondary" data-close="createModalOverlay">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODIFIER MODAL -->
+<div class="modal-overlay" id="addModifierOverlay">
+  <div class="modal">
+    <div class="modal-heading">
+      <h3>Add modifier</h3>
+      <button class="modal-close" data-close="addModifierOverlay">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="modifierOptionSetName">Option Set</label>
+        <input type="text" id="modifierOptionSetName" disabled />
+      </div>
+      <div class="field" id="modifierField">
+        <label for="modifierName">Modifier name</label>
+        <input type="text" id="modifierName" placeholder="Modifier name" />
+        <span class="error" id="modifierError">Please enter a modifier name.</span>
+      </div>
+      <div class="field" id="modifierPriceField">
+        <label for="modifierPrice">Price</label>
+        <div class="price-field-wrap">
+          <span class="price-prefix">$</span>
+          <input type="number" id="modifierPrice" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        <span class="error" id="modifierPriceError">Enter a valid, non-negative price.</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="saveModifierBtn">Add</button>
+      <button class="btn btn-secondary" data-close="addModifierOverlay">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SET RULES MODAL -->
+<div class="modal-overlay" id="rulesOverlay">
+  <div class="modal">
+    <div class="modal-heading">
+      <h3>Set rules</h3>
+      <button class="modal-close" data-close="rulesOverlay">✕</button>
+    </div>
+    <p class="modal-desc">Rules let you customise POS flows with minimum and maximum selections and option prefixes.</p>
+    <div class="modal-body">
+      <div class="rule-grid">
+        <div class="field" id="minField">
+          <label>Minimum Selections</label>
+          <div class="counter">
+            <button type="button" id="ruleMinMinus" aria-label="Decrease minimum">−</button>
+            <span class="counter-value" id="ruleMinValue">0</span>
+            <button type="button" id="ruleMinPlus" aria-label="Increase minimum">+</button>
+          </div>
+          <span class="error" id="minError">Min can't be negative.</span>
+        </div>
+        <div class="field" id="maxField">
+          <label>Maximum Selections</label>
+          <div class="counter">
+            <button type="button" id="ruleMaxMinus" aria-label="Decrease maximum">−</button>
+            <span class="counter-value" id="ruleMaxValue">0</span>
+            <button type="button" id="ruleMaxPlus" aria-label="Increase maximum">+</button>
+          </div>
+          <span class="error" id="maxError">Max must be greater than or equal to min.</span>
+        </div>
+      </div>
+      <label class="checkbox-card" id="prefixCard">
+        <input type="checkbox" id="rulePrefix" />
+        <span class="checkbox-copy">
+          <span class="checkbox-title">Show option prefixes</span>
+          <span class="checkbox-sub">No, Extra, Side, Only</span>
+        </span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="saveRulesBtn">Save</button>
+      <button class="btn btn-secondary" data-close="rulesOverlay">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODIFIER CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModifierOverlay">
+  <div class="modal" style="width:360px;">
+    <div class="modal-heading">
+      <h3>Delete modifier</h3>
+      <button class="modal-close" data-close="deleteModifierOverlay">✕</button>
+    </div>
+    <p class="modal-desc" id="deleteModifierDesc">Are you sure you want to delete this modifier?</p>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--danger);color:white;" id="confirmDeleteModifierBtn">Delete</button>
+      <button class="btn btn-secondary" data-close="deleteModifierOverlay">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const state = { optionSets: [] }; // {id, name, values:[{id,name}], rules:{required,min,max} or null}
+  let activeOptionSetId = null;
+
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  function showToast(msg){
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  function openModal(id){ $('#'+id).classList.add('open'); }
+  function closeModal(id){ $('#'+id).classList.remove('open'); clearErrors(id); }
+
+  $$('[data-close]').forEach(btn=>{
+    btn.addEventListener('click', ()=> closeModal(btn.getAttribute('data-close')));
+  });
+  $$('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click', (e)=>{ if(e.target === ov) closeModal(ov.id); });
+  });
+
+  function clearErrors(modalId){
+    $('#'+modalId).querySelectorAll('.field').forEach(f=>f.classList.remove('invalid'));
+  }
+
+  function uid(){ return 'id_' + Math.random().toString(36).slice(2,9); }
+
+  // ---------- CREATE OPTION SET ----------
+  $('#openCreateModalBtn').addEventListener('click', ()=>{
+    $('#setName').value='';
+    $('#setValues').value='';
+    clearErrors('createModalOverlay');
+    openModal('createModalOverlay');
+    setTimeout(()=>$('#setName').focus(), 50);
+  });
+
+  $('#saveCreateBtn').addEventListener('click', ()=>{
+    const nameInput = $('#setName');
+    const valuesInput = $('#setValues');
+    const name = nameInput.value.trim();
+    const rawValues = valuesInput.value.split(',').map(v=>v.trim()).filter(Boolean);
+
+    let valid = true;
+    $('#nameField').classList.remove('invalid');
+    $('#valuesField').classList.remove('invalid');
+
+    if(!name){
+      $('#nameField').classList.add('invalid');
+      valid = false;
+    } else if (state.optionSets.some(os => os.name.toLowerCase() === name.toLowerCase())) {
+      $('#nameError').textContent = 'An option set with this name already exists.';
+      $('#nameField').classList.add('invalid');
+      valid = false;
+    } else {
+      $('#nameError').textContent = 'Please enter a name for this option set.';
+    }
+
+    if(rawValues.length === 0){
+      $('#valuesField').classList.add('invalid');
+      valid = false;
+    }
+
+    if(!valid) return;
+
+    const optionSet = {
+      id: uid(),
+      name,
+      values: rawValues.map(v => ({ id: uid(), name: v, price: '0.00', linkedProducts: Math.floor(Math.random()*12)+1 })),
+      rules: null,
+    };
+    state.optionSets.push(optionSet);
+    render();
+    closeModal('createModalOverlay');
+    showToast(`"${name}" option set created.`);
+  });
+
+  // ---------- ADD MODIFIER ----------
+  $('[id="openCreateModalBtn"]'); // no-op keep linter quiet
+
+  function bindAddModifierButtons(){
+    $$('.add-modifier-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeOptionSetId = btn.dataset.id;
+        const os = state.optionSets.find(o=>o.id === activeOptionSetId);
+        $('#modifierOptionSetName').value = os ? os.name : '';
+        $('#modifierName').value='';
+        $('#modifierPrice').value='';
+        clearErrors('addModifierOverlay');
+        openModal('addModifierOverlay');
+        setTimeout(()=>$('#modifierName').focus(), 50);
+      });
+    });
+  }
+
+  $('#saveModifierBtn').addEventListener('click', ()=>{
+    const input = $('#modifierName');
+    const name = input.value.trim();
+    const priceInput = $('#modifierPrice');
+    const priceRaw = priceInput.value.trim();
+
+    $('#modifierField').classList.remove('invalid');
+    $('#modifierPriceField').classList.remove('invalid');
+
+    const os = state.optionSets.find(o=>o.id === activeOptionSetId);
+    let valid = true;
+
+    if(!name){
+      $('#modifierField').classList.add('invalid');
+      valid = false;
+    } else if(os && os.values.some(v=>v.name.toLowerCase() === name.toLowerCase())){
+      $('#modifierError').textContent = 'This option already exists in the set.';
+      $('#modifierField').classList.add('invalid');
+      valid = false;
+    } else {
+      $('#modifierError').textContent = 'Please enter a modifier name.';
+    }
+
+    const priceNum = priceRaw === '' ? 0 : parseFloat(priceRaw);
+    if(isNaN(priceNum) || priceNum < 0){
+      $('#modifierPriceField').classList.add('invalid');
+      valid = false;
+    }
+
+    if(!valid) return;
+
+    if(os){
+      os.values.push({ id: uid(), name, price: priceNum.toFixed(2), linkedProducts: Math.floor(Math.random()*12)+1 });
+      render();
+      showToast(`"${name}" added to ${os.name}.`);
+    }
+    closeModal('addModifierOverlay');
+  });
+
+  // ---------- SET RULES ----------
+  function setCounter(id, val){ $('#'+id).textContent = String(Math.max(0, val)); }
+  function getCounter(id){ return parseInt($('#'+id).textContent, 10) || 0; }
+
+  $('#ruleMinMinus').addEventListener('click', ()=>{
+    const min = Math.max(0, getCounter('ruleMinValue') - 1);
+    setCounter('ruleMinValue', min);
+    if(getCounter('ruleMaxValue') < min) setCounter('ruleMaxValue', min);
+  });
+  $('#ruleMinPlus').addEventListener('click', ()=>{
+    const min = getCounter('ruleMinValue') + 1;
+    setCounter('ruleMinValue', min);
+    if(getCounter('ruleMaxValue') < min) setCounter('ruleMaxValue', min);
+  });
+  $('#ruleMaxMinus').addEventListener('click', ()=>{
+    const min = getCounter('ruleMinValue');
+    const next = Math.max(min, getCounter('ruleMaxValue') - 1);
+    setCounter('ruleMaxValue', next);
+  });
+  $('#ruleMaxPlus').addEventListener('click', ()=>{
+    setCounter('ruleMaxValue', getCounter('ruleMaxValue') + 1);
+  });
+  $('#prefixCard').addEventListener('click', (e)=>{
+    if(e.target.tagName !== 'INPUT'){
+      $('#rulePrefix').checked = !$('#rulePrefix').checked;
+    }
+    $('#prefixCard').classList.toggle('checked', $('#rulePrefix').checked);
+  });
+
+  function bindRuleButtons(){
+    $$('.set-rules-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeOptionSetId = btn.dataset.id;
+        const os = state.optionSets.find(o=>o.id === activeOptionSetId);
+        clearErrors('rulesOverlay');
+        if(os && os.rules){
+          setCounter('ruleMinValue', os.rules.min);
+          setCounter('ruleMaxValue', os.rules.max);
+          $('#rulePrefix').checked = !!os.rules.showPrefixes;
+        } else {
+          setCounter('ruleMinValue', 0);
+          setCounter('ruleMaxValue', os ? os.values.length : 0);
+          $('#rulePrefix').checked = false;
+        }
+        $('#prefixCard').classList.toggle('checked', $('#rulePrefix').checked);
+        openModal('rulesOverlay');
+      });
+    });
+  }
+
+  $('#saveRulesBtn').addEventListener('click', ()=>{
+    const os = state.optionSets.find(o=>o.id === activeOptionSetId);
+    if(!os) return;
+
+    const min = getCounter('ruleMinValue');
+    const max = getCounter('ruleMaxValue');
+    const showPrefixes = $('#rulePrefix').checked;
+
+    $('#minField').classList.remove('invalid');
+    $('#maxField').classList.remove('invalid');
+
+    let valid = true;
+    if(min < 0){ $('#minField').classList.add('invalid'); valid = false; }
+    if(max < min){
+      $('#maxError').textContent = "Max must be greater than or equal to min.";
+      $('#maxField').classList.add('invalid');
+      valid = false;
+    } else if (max > os.values.length){
+      $('#maxError').textContent = `Max can't exceed the number of options (${os.values.length}).`;
+      $('#maxField').classList.add('invalid');
+      valid = false;
+    }
+
+    if(!valid) return;
+
+    os.rules = { min, max, showPrefixes };
+    render();
+    closeModal('rulesOverlay');
+    showToast(`Rules saved for "${os.name}".`);
+  });
+
+  // ---------- EDIT PRICE ----------
+  function bindPriceInputs(){
+    $$('.price-input').forEach(input=>{
+      input.addEventListener('change', ()=>{
+        const os = state.optionSets.find(o=>o.id === input.dataset.setId);
+        if(!os) return;
+        const value = os.values.find(v=>v.id === input.dataset.valueId);
+        if(!value) return;
+        const num = parseFloat(input.value);
+        value.price = isNaN(num) ? '0.00' : num.toFixed(2);
+        input.value = value.price;
+      });
+    });
+  }
+
+  // ---------- DRAG TO REORDER ----------
+  let dragState = null; // { setId, valueId }
+
+  function bindDragHandles(){
+    $$('table.opt-table tbody tr').forEach(tr=>{
+      const handle = tr.querySelector('.drag-handle');
+      if(!handle) return;
+
+      handle.addEventListener('dragstart', (e)=>{
+        dragState = { setId: tr.dataset.setId, valueId: tr.dataset.valueId };
+        tr.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        // Use the row as the drag image so the whole row appears to move, not just the handle.
+        e.dataTransfer.setDragImage(tr, 20, 20);
+      });
+
+      handle.addEventListener('dragend', ()=>{
+        tr.classList.remove('dragging');
+        $$('table.opt-table tbody tr').forEach(r=>r.classList.remove('drag-over-top','drag-over-bottom'));
+        dragState = null;
+      });
+
+      tr.addEventListener('dragover', (e)=>{
+        if(!dragState || dragState.setId !== tr.dataset.setId || dragState.valueId === tr.dataset.valueId) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const rect = tr.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
+        tr.classList.toggle('drag-over-top', before);
+        tr.classList.toggle('drag-over-bottom', !before);
+      });
+
+      tr.addEventListener('dragleave', ()=>{
+        tr.classList.remove('drag-over-top','drag-over-bottom');
+      });
+
+      tr.addEventListener('drop', (e)=>{
+        if(!dragState || dragState.setId !== tr.dataset.setId || dragState.valueId === tr.dataset.valueId) return;
+        e.preventDefault();
+        const os = state.optionSets.find(o=>o.id === dragState.setId);
+        if(!os) return;
+
+        const fromIndex = os.values.findIndex(v=>v.id === dragState.valueId);
+        let toIndex = os.values.findIndex(v=>v.id === tr.dataset.valueId);
+        if(fromIndex === -1 || toIndex === -1) return;
+
+        const rect = tr.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
+
+        const [moved] = os.values.splice(fromIndex, 1);
+        toIndex = os.values.findIndex(v=>v.id === tr.dataset.valueId);
+        os.values.splice(before ? toIndex : toIndex + 1, 0, moved);
+
+        render();
+        showToast(`Reordered "${moved.name}".`);
+      });
+    });
+  }
+
+  // ---------- DELETE MODIFIER (with confirmation) ----------
+  let pendingDelete = null;
+
+  function bindRemoveButtons(){
+    $$('.bin-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const os = state.optionSets.find(o=>o.id === btn.dataset.setId);
+        if(!os) return;
+        const value = os.values.find(v=>v.id === btn.dataset.valueId);
+        if(!value) return;
+        pendingDelete = { setId: os.id, valueId: value.id };
+        const count = value.linkedProducts || 0;
+        $('#deleteModifierDesc').textContent =
+          `Deleting "${value.name}" will remove it from ${count} linked product${count === 1 ? '' : 's'}. This can't be undone.`;
+        openModal('deleteModifierOverlay');
+      });
+    });
+  }
+
+  $('#confirmDeleteModifierBtn').addEventListener('click', ()=>{
+    if(!pendingDelete) return;
+    const os = state.optionSets.find(o=>o.id === pendingDelete.setId);
+    if(os){
+      const removed = os.values.find(v=>v.id === pendingDelete.valueId);
+      os.values = os.values.filter(v=>v.id !== pendingDelete.valueId);
+      if(os.rules && os.rules.max > os.values.length){
+        os.rules.max = Math.max(os.values.length, os.rules.min || 0);
+      }
+      render();
+      if(removed) showToast(`"${removed.name}" deleted.`);
+    }
+    pendingDelete = null;
+    closeModal('deleteModifierOverlay');
+  });
+
+  // ---------- REMOVE RULES ----------
+  function bindClearRuleButtons(){
+    $$('.clear-rule-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const os = state.optionSets.find(o=>o.id === btn.dataset.id);
+        if(!os) return;
+        os.rules = null;
+        render();
+      });
+    });
+  }
+
+  // ---------- RENDER ----------
+  function render(){
+    const container = $('#optionSetsList');
+    const empty = $('#emptyState');
+    if(state.optionSets.length === 0){
+      empty.style.display = 'block';
+      container.innerHTML = '';
+      return;
+    }
+    empty.style.display = 'none';
+
+    container.innerHTML = state.optionSets.map(os => {
+      const ruleTag = os.rules
+        ? `<div class="rule-tag">
+            <span class="rule-label">Rules</span>
+            <span class="rule-value">Minimum Selection: ${os.rules.min}, Maximum selection: ${os.rules.max}${os.rules.showPrefixes ? ', Show prefix' : ''}
+              <button class="clear-rule-btn" data-id="${os.id}" aria-label="Clear rules">✕</button>
+            </span>
+          </div>`
+        : `<span></span>`;
+
+      const rows = os.values.map(v => `
+        <tr data-set-id="${os.id}" data-value-id="${v.id}">
+          <td class="drag-col"><span class="drag-handle" draggable="true"><span></span><span></span><span></span><span></span><span></span><span></span></span></td>
+          <td class="name-col">${escapeHtml(v.name)}</td>
+          <td class="price-col">
+            <input class="price-input" type="number" step="0.01" min="0" value="${v.price !== undefined ? v.price : '0.00'}" data-set-id="${os.id}" data-value-id="${v.id}" aria-label="Price for ${escapeHtml(v.name)}" />
+          </td>
+          <td class="bin-col">
+            <button class="bin-btn" data-set-id="${os.id}" data-value-id="${v.id}" aria-label="Delete ${escapeHtml(v.name)}">🗑</button>
+          </td>
+        </tr>`).join('');
+
+      return `
+        <div class="option-set-block" style="margin-bottom:24px;">
+          <h3 class="option-set-title">${escapeHtml(os.name)}</h3>
+          <div class="table-wrap">
+            <table class="opt-table">
+              <thead>
+                <tr>
+                  <th class="drag-col"></th>
+                  <th>Name <span class="sort-arrow">↑</span></th>
+                  <th>Price <span class="sort-arrow">↑</span></th>
+                  <th class="bin-col"></th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div class="table-footer-row">
+            ${ruleTag}
+            <div class="table-footer-actions">
+              <button class="icon-link-btn set-rules-btn" data-id="${os.id}">⚙ ${os.rules ? 'Edit rules' : 'Set rules'}</button>
+              <button class="icon-link-btn add-modifier-btn" data-id="${os.id}">+ Add modifier</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    bindAddModifierButtons();
+    bindRuleButtons();
+    bindRemoveButtons();
+    bindClearRuleButtons();
+    bindPriceInputs();
+    bindDragHandles();
+  }
+
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
