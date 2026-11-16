@@ -1,0 +1,1415 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option Sets · Lightspeed Back Office</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* Colour values follow Chameleon tokens (@kounta/chameleon KountaThemeLight) where they map. */
+      :root {
+        --app-bg: #f7f6f4;
+        --surface: #fff;
+        --ink: #1f1f1f;
+        --ink-soft: #3a3a3a;
+        --muted: #6b6b6b;
+        --faint: #9a9a9a;
+        --line: #e5e4e1;
+        --line-strong: #c9c8c5;
+        --header-bg: #f9f8f6;
+        --hover: #efeeeb;
+        --blue: #0b6bcb;
+        --blue-hover: #0957a6;
+        --blue-link: #3b8fe5;
+        --focus: #2e61de; /* blue500 */
+        --pill-bg: #d6e8fb;
+        --pill-ink: #173a63;
+        --red: #cc1820; /* maple600 */
+        --red-soft: #fff5f5; /* maple50 */
+        --green: #006f07; /* green900 */
+        font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-feature-settings: "cv11", "ss01";
+        -webkit-font-smoothing: antialiased;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; }
+      body { min-height: 100vh; background: var(--app-bg); color: var(--ink); font-size: 15px; line-height: 1.4; }
+      button, input, select { font: inherit; color: inherit; }
+      button { cursor: pointer; }
+      a { color: inherit; text-decoration: none; }
+      svg { display: block; flex: 0 0 auto; }
+      :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+      /* ---------- Sidebar ---------- */
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 20;
+        display: flex;
+        width: 200px;
+        flex-direction: column;
+        padding: 14px 8px 12px 6px;
+        background: var(--app-bg);
+      }
+      .bo-title { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 16px; font-size: 16px; font-weight: 600; }
+      .nav { display: grid; gap: 4px; }
+      .nav-item {
+        display: flex;
+        width: 100%;
+        height: 32px;
+        align-items: center;
+        gap: 9px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        font-size: 15px;
+        text-align: left;
+      }
+      .nav-item:hover { background: var(--hover); }
+      .nav-item svg.nav-icon { width: 16px; height: 16px; }
+      .nav-item .nav-chevron { width: 14px; height: 14px; margin-left: auto; color: var(--ink-soft); }
+      .subnav { display: grid; gap: 4px; margin: 4px 0 4px 16px; padding-left: 8px; border-left: 1px solid var(--line); }
+      .sub-item { display: flex; height: 31px; align-items: center; padding: 0 8px; border-radius: 6px; font-size: 15px; }
+      .sub-item:hover { background: var(--hover); }
+      .sub-item.is-active { background: #ebe9e6; font-weight: 500; }
+      .sidebar-foot { display: grid; gap: 12px; margin-top: auto; }
+      .user-block { display: flex; align-items: flex-start; gap: 9px; padding: 0 8px; }
+      .user-block svg { width: 16px; height: 16px; margin-top: 2px; }
+      .user-name { font-size: 15px; }
+      .user-company { color: var(--muted); font-size: 12px; }
+
+      /* ---------- Main panel ---------- */
+      .main { min-height: 100vh; margin-left: 200px; padding-top: 8px; }
+      .panel {
+        min-height: calc(100vh - 8px);
+        border: 1px solid var(--line);
+        border-right: 0;
+        border-bottom: 0;
+        border-radius: 12px 0 0 0;
+        background: var(--surface);
+      }
+      .page-header {
+        display: flex;
+        height: 55px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--line);
+      }
+      .page-header h1 { margin: 0; font-size: 28px; font-weight: 500; letter-spacing: -0.3px; }
+      .header-actions { display: flex; align-items: center; gap: 12px; }
+      .header-icon { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 6px; background: transparent; }
+      .header-icon:hover { background: var(--hover); }
+      .header-icon svg { width: 20px; height: 20px; }
+      .pos-button { height: 32px; margin-left: 8px; padding: 0 24px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 13px; font-weight: 600; letter-spacing: .3px; }
+      .pos-button:hover { background: var(--header-bg); }
+
+      .tabs { display: flex; gap: 20px; padding: 0 24px; overflow-x: auto; }
+      .tab {
+        position: relative;
+        padding: 14px 0 10px;
+        border: 0;
+        background: transparent;
+        color: var(--ink-soft);
+        font-size: 15px;
+        white-space: nowrap;
+      }
+      .tab:hover { color: var(--ink); }
+      .tab.is-active { color: var(--ink); font-weight: 600; }
+      .tab.is-active::after { position: absolute; right: 0; bottom: 4px; left: 0; height: 2px; background: var(--blue); content: ""; }
+
+      .content { max-width: 1580px; margin: 0 auto; padding: 66px 128px 120px; }
+
+      /* ---------- Toolbar ---------- */
+      .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .search {
+        display: flex;
+        width: 302px;
+        height: 40px;
+        align-items: center;
+        gap: 6px;
+        padding: 0 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
+        background: #fff;
+      }
+      .search:focus-within { border-color: var(--focus); box-shadow: inset 0 0 0 1px var(--focus); }
+      .search svg { width: 20px; height: 20px; }
+      .search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 15px; }
+      .search input::placeholder { color: var(--faint); }
+      .btn {
+        display: inline-flex;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .btn:hover:not(:disabled) { background: var(--header-bg); border-color: var(--line-strong); }
+      .btn:disabled { color: var(--faint); cursor: default; }
+      .btn-primary { height: 38px; border-color: var(--blue); background: var(--blue); color: #fff; }
+      .btn-primary:hover:not(:disabled) { border-color: var(--blue-hover); background: var(--blue-hover); }
+
+      .bulk-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 32px 0 24px; }
+      .bulk-select { display: flex; align-items: center; gap: 12px; font-size: 15px; cursor: pointer; }
+      .bulk-select .selected-count { margin-left: 2px; }
+
+      /* Chameleon-style checkbox */
+      .checkbox {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+        margin: 0;
+        border: 1px solid #8b939b; /* gray400 */
+        border-radius: 3px;
+        background: #fff center / 14px no-repeat;
+        appearance: none;
+        cursor: pointer;
+      }
+      .checkbox:hover { border-color: #464a51; }
+      .checkbox:checked, .checkbox:indeterminate { border-color: var(--blue); background-color: var(--blue); }
+      .checkbox:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3.5 8.5 3 3 6-7' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+      .checkbox:indeterminate { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8h8' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); }
+
+      /* ---------- Prototype strip ---------- */
+      .dev-box {
+        margin-bottom: 16px;
+        border: 1px dashed var(--line-strong);
+        border-radius: 6px;
+        background: var(--header-bg);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .dev-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 8px 12px;
+      }
+      .dev-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 20px; }
+      .spec-toggle { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--blue-link); font-size: 13px; font-weight: 600; white-space: nowrap; }
+      .spec-toggle:hover { text-decoration: underline; }
+      .spec-toggle:focus-visible { border-radius: 2px; outline: 2px solid var(--focus); outline-offset: 2px; }
+      .spec-toggle svg { flex: 0 0 auto; width: 14px; height: 14px; transition: transform 120ms; }
+      .spec-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+      .save-spec { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; padding: 14px 16px 16px; border-top: 1px dashed var(--line-strong); color: var(--ink-soft); line-height: 1.5; }
+      .save-spec[hidden] { display: none; }
+      .save-spec h3 { margin: 0 0 4px; color: var(--ink); font-size: 13px; font-weight: 600; }
+      .save-spec ul { margin: 0; padding-left: 18px; }
+      .save-spec li + li { margin-top: 2px; }
+      .save-spec p { margin: 0; }
+      .save-spec .spec-wide { grid-column: 1 / -1; }
+      .save-spec code, .save-spec kbd { padding: 0 4px; border: 1px solid var(--line); border-radius: 3px; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+      @media (max-width: 900px) { .save-spec { grid-template-columns: 1fr; } }
+      .dev-tag { margin-right: 8px; padding: 2px 6px; border-radius: 4px; background: #ebe9e6; color: var(--ink-soft); font-size: 11px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; }
+      .switch { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 8px; color: var(--ink-soft); cursor: pointer; }
+      .switch-state { min-width: 20px; font-weight: 600; }
+      .switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+      .switch-track { position: relative; width: 32px; height: 18px; border-radius: 9px; background: #bcc4ca; transition: background 120ms; }
+      .switch-track::after { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; content: ""; transition: transform 120ms; }
+      .switch input:checked + .switch-track { background: var(--red); }
+      .switch input:checked + .switch-track::after { transform: translateX(14px); }
+      .switch input:focus-visible + .switch-track { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+      /* ---------- Cards ---------- */
+      .cards { display: grid; gap: 12px; }
+      .card { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+      .card[hidden] { display: none; }
+      .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px 18px; }
+      .card-lead { display: flex; min-width: 0; align-items: center; gap: 12px; }
+      .card-title { margin: 0; font-size: 18px; font-weight: 500; line-height: 1.3; }
+      .card-sub { margin-top: 5px; color: var(--ink-soft); font-size: 15px; }
+      .card-tools { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; }
+      .save-status { color: var(--muted); font-size: 13px; white-space: nowrap; transition: opacity 400ms ease; }
+      .save-status.is-saved { color: var(--green); }
+      .save-status.is-error { color: var(--red); font-weight: 500; }
+      .save-status.is-fading { opacity: 0; }
+      .pill { display: inline-flex; height: 28px; align-items: center; padding: 0 14px; border-radius: 14px; background: var(--pill-bg); color: var(--pill-ink); font-size: 14px; white-space: nowrap; }
+      .icon-btn { display: grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: 6px; background: transparent; }
+      .icon-btn:hover { background: var(--hover); }
+      .icon-btn svg { width: 20px; height: 20px; }
+      .chevron { transition: transform 150ms ease; }
+      .chevron.is-open { transform: rotate(180deg); }
+      .menu-wrap { position: relative; }
+      .menu {
+        position: absolute;
+        top: 36px;
+        right: 0;
+        z-index: 5;
+        display: grid;
+        width: 200px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+      }
+      .menu[hidden] { display: none; }
+      .menu button { padding: 8px 10px; border: 0; border-radius: 4px; background: transparent; font-size: 14px; text-align: left; }
+      .menu button:hover { background: var(--header-bg); }
+      .menu .is-destructive { color: var(--red); }
+      .card-body { padding: 0 24px 20px; }
+      .card-body[hidden] { display: none; }
+
+      /* ---------- Modifier table ---------- */
+      .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+      .mod-table { width: 100%; min-width: 560px; border-collapse: collapse; table-layout: fixed; }
+      .mod-table col.c-handle { width: 44px; }
+      .mod-table col.c-cost { width: 92px; }
+      .mod-table col.c-tax { width: 100px; }
+      .mod-table col.c-del { width: 44px; }
+      .mod-table th { height: 40px; padding: 0 12px; background: var(--header-bg); font-size: 15px; font-weight: 400; text-align: left; white-space: nowrap; }
+      .mod-table th:nth-child(2) { border-left: 1px solid var(--line); }
+      .mod-table th.th-cost, .mod-table th.th-tax { padding: 0 12px; }
+      .mod-row td { height: 48px; padding: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: #fff; }
+      .mod-row td:first-child { border-left: 0; text-align: center; }
+      .mod-row td.td-del { text-align: center; }
+      .mod-row.is-error td:first-child, .mod-row.is-invalid td:first-child { box-shadow: inset 3px 0 0 var(--red); }
+      .mod-row.is-error td, .mod-row.is-invalid td { background: var(--red-soft); }
+      .handle { display: inline-grid; color: #5c626a; cursor: grab; }
+      .handle svg { width: 20px; height: 20px; }
+      .is-draft .handle { visibility: hidden; }
+
+      /* The input is the cell: it fills the cell edge to edge, and the focus ring sits on the cell's boundary. */
+      .cell-input, .tax-select {
+        display: block;
+        width: 100%;
+        height: 48px;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        outline: 0;
+        background: transparent;
+        font-size: 15px;
+      }
+      .cell-input { padding: 0 12px; }
+      .cell-input::placeholder { color: var(--faint); }
+      .cell-input:hover, .tax-select:hover { background-color: var(--header-bg); }
+      .cell-input:focus, .tax-select:focus { background-color: #fff; box-shadow: inset 0 0 0 2px var(--focus); }
+      .is-invalid [data-field="name"], .is-invalid [data-field="name"]:focus { background-color: #fff; box-shadow: inset 0 0 0 2px var(--red); }
+      .cost-wrap { position: relative; }
+      .cost-wrap .cur { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); pointer-events: none; }
+      .cost-wrap .cell-input { padding-left: 21px; }
+      .is-draft .cost-wrap .cur { display: none; }
+      .is-draft .cost-wrap .cell-input { padding-left: 12px; }
+
+      .tax-select {
+        padding: 0 30px 0 12px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%231f1f1f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 12px center / 14px no-repeat;
+        font-size: 13px;
+        font-weight: 500;
+        appearance: none;
+        cursor: pointer;
+      }
+
+      .del-btn { display: inline-grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: 6px; background: transparent; }
+      .del-btn:hover { background: var(--red-soft); color: var(--red); }
+      .del-btn svg { width: 18px; height: 18px; }
+
+      .err-list { display: grid; gap: 4px; }
+      .err-list:has(.err-item:not([hidden])) { margin-top: 10px; }
+      .err-item { display: flex; align-items: baseline; gap: 8px; margin: 0; padding-left: 4px; color: var(--red); font-size: 13px; line-height: 18px; }
+      .err-item[hidden] { display: none; }
+      .retry[hidden] { display: none; }
+      .retry { padding: 0; border: 0; background: transparent; color: var(--red); font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+
+      .add-mod {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin: 12px 0 0 4px;
+        padding: 2px 2px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--blue-link);
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .add-mod svg { width: 14px; height: 14px; }
+      .add-mod:hover { color: var(--blue); text-decoration: underline; }
+
+      .empty-search { display: none; padding: 40px; border: 1px dashed var(--line-strong); border-radius: 6px; color: var(--muted); text-align: center; }
+      .empty-search.is-visible { display: block; }
+
+      /* ---------- Writes panel ---------- */
+      .writes {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 30;
+        width: 380px;
+        overflow: hidden;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 6px 24px rgb(0 0 0 / 10%);
+      }
+      .writes-head { display: flex; height: 46px; align-items: center; justify-content: space-between; padding: 0 8px 0 14px; border-bottom: 1px solid var(--line); background: var(--header-bg); }
+      .writes-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+      .writes-count { margin-left: 8px; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+      .writes-body { max-height: 260px; overflow: auto; }
+      .writes.is-collapsed { width: 220px; }
+      .writes.is-collapsed .writes-body { display: none; }
+      .writes.is-collapsed .writes-head { border-bottom: 0; }
+      .writes.is-collapsed .collapse-icon { transform: rotate(180deg); }
+      .write-log { margin: 0; padding: 0; list-style: none; }
+      .write-log:empty::after { display: block; padding: 16px 14px; color: var(--faint); content: "No writes yet. Edit a modifier row, then press Enter or leave the row."; font-size: 12px; }
+      .write { padding: 9px 14px; border-bottom: 1px solid #efeeeb; font-size: 12px; }
+      .write-top { display: flex; gap: 10px; align-items: baseline; }
+      .write time { color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
+      .write-ctx { overflow: hidden; flex: 1; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+      .write-res { color: var(--muted); font-size: 11px; }
+      .write-res.ok { color: var(--green); }
+      .write-res.fail { color: var(--red); font-weight: 600; }
+      .write code { display: block; margin-top: 3px; overflow: hidden; color: var(--ink-soft); font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+      .collapse-icon { transition: transform 150ms; }
+
+      /* ---------- Toast ---------- */
+      .toasts { position: fixed; bottom: 24px; left: 224px; z-index: 40; }
+
+      /* ---------- Existing-modifier suggestions ---------- */
+      .suggest { position: fixed; z-index: 50; max-height: 380px; overflow-y: auto; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: 0 8px 24px rgba(0, 0, 0, .12), 0 1px 3px rgba(0, 0, 0, .08); }
+      .suggest[hidden] { display: none; }
+      .suggest-head { padding: 6px 10px 4px; color: var(--muted); font-size: 12px; font-weight: 600; }
+      .suggest-opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 16px; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+      .suggest-opt.is-active { background: var(--hover); }
+      .suggest-opt[aria-disabled="true"] { cursor: default; opacity: .55; }
+      .suggest-name { overflow: hidden; color: var(--ink); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+      .suggest-name mark { background: transparent; color: inherit; font-weight: 600; }
+      .suggest-meta { color: var(--ink-soft); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .suggest-sets { grid-column: 1 / -1; overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+      .toast {
+        display: flex;
+        width: min(520px, calc(100vw - 260px));
+        align-items: center;
+        gap: 12px;
+        padding: 12px 12px 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 6px 24px rgb(0 0 0 / 12%);
+        font-size: 14px;
+        animation: toast-in 160ms ease-out;
+      }
+      .toast-msg { flex: 1; }
+      .toast-undo { padding: 4px 6px; border: 0; border-radius: 4px; background: transparent; color: var(--blue); font-weight: 600; }
+      .toast-undo:hover { background: #f5f7ff; }
+      .toast-x { display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 4px; background: transparent; color: var(--muted); }
+      .toast-x:hover { background: var(--hover); }
+      @keyframes toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+      @media (max-width: 1200px) { .content { padding: 48px 40px 120px; } }
+      @media (max-width: 860px) {
+        .sidebar { display: none; }
+        .main { margin-left: 0; padding-top: 0; }
+        .panel { border-radius: 0; border-left: 0; }
+        .content { padding: 32px 16px 320px; }
+        .toolbar, .bulk-row, .dev-strip { flex-wrap: wrap; }
+        .search { width: 100%; }
+        .card-head { align-items: flex-start; padding: 16px; }
+        .card-body { padding: 0 16px 16px; }
+        .pill { padding: 0 10px; font-size: 12px; }
+        .toasts { left: 16px; bottom: 300px; }
+        .toast { width: calc(100vw - 32px); }
+        .writes { right: 12px; bottom: 12px; width: calc(100vw - 24px); }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Back Office navigation">
+      <a class="bo-title" href="#">Back Office
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <nav class="nav">
+        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10 12 3.5l8.5 6.5v9.5a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg>Home</a>
+        <div>
+          <button class="nav-item" type="button" aria-expanded="true"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>Products<svg class="nav-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 10 4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="subnav">
+            <a class="sub-item is-active" href="#" aria-current="page">Product list</a>
+            <a class="sub-item" href="#">Online products</a>
+            <a class="sub-item" href="#">Site products</a>
+            <a class="sub-item" href="#">Inventory</a>
+            <a class="sub-item" href="#">Suppliers</a>
+          </div>
+        </div>
+        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="m7.5 15 4-4.5 3 2.5 5-6"/></svg>Reports</a>
+        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg>People<svg class="nav-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="3.25"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Discover<svg class="nav-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Financial services</a>
+        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.8v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</a>
+      </nav>
+      <div class="sidebar-foot">
+        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.5"/><path d="M12 17h.01"/></svg>Help &amp; support</a>
+        <div class="user-block">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.3-2 3.2-3 5.5-3s4.2 1 5.5 3"/></svg>
+          <div><div class="user-name">Dominique Bratton</div><div class="user-company">Pete - Test Company</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="panel">
+        <header class="page-header">
+          <h1>Products</h1>
+          <div class="header-actions">
+            <button class="header-icon" type="button" aria-label="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v10a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17h0A1.5 1.5 0 0 1 4 15.5z"/><path d="M8 9h8M8 12.5h5"/></svg></button>
+            <button class="header-icon" type="button" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 6.5-2.5 8-2.5 8h17S18 15.5 18 9"/><path d="M10.3 20.5a2 2 0 0 0 3.4 0"/></svg></button>
+            <button class="pos-button" type="button">POS</button>
+          </div>
+        </header>
+        <nav class="tabs" aria-label="Products sections">
+          <button class="tab" type="button">All products</button>
+          <button class="tab" type="button">POS Categories</button>
+          <button class="tab is-active" type="button" aria-current="page">Option Sets</button>
+          <button class="tab" type="button">Reporting Groups</button>
+          <button class="tab" type="button">Menu Pricing Assistant</button>
+        </nav>
+
+        <main class="content">
+          <div class="toolbar">
+            <label class="search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+              <input id="searchInput" type="search" placeholder="Search for option set or modifier" aria-label="Search for option set or modifier" autocomplete="off" />
+            </label>
+            <button class="btn btn-primary" id="createSet" type="button">Create option set</button>
+          </div>
+
+          <div class="bulk-row">
+            <label class="bulk-select"><input class="checkbox" id="selectAll" type="checkbox" /><span>All</span><span class="selected-count" id="selectedCount">0 selected</span></label>
+          </div>
+
+          <div class="dev-box" role="region" aria-label="Prototype controls">
+            <div class="dev-strip">
+              <span><span class="dev-tag">Prototype</span>Rows save as one write only when you press Enter or leave the row. Esc reverts.</span>
+              <div class="dev-controls">
+                <button class="spec-toggle" id="specToggle" type="button" aria-expanded="false" aria-controls="saveSpec">How saving works<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <label class="switch">Simulate save failure: <span class="switch-state" id="failState">off</span><input id="failToggle" type="checkbox" role="switch" /><span class="switch-track" aria-hidden="true"></span></label>
+              </div>
+            </div>
+            <div class="save-spec" id="saveSpec" hidden>
+              <section>
+                <h3>When a row saves</h3>
+                <ul>
+                  <li>Press <kbd>Enter</kbd> in any cell of the row.</li>
+                  <li>Focus leaves the row: click anywhere outside it, or <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> past its first or last cell.</li>
+                  <li>Moving between cells in the same row never saves. There's no timer or auto-save.</li>
+                  <li><kbd>Esc</kbd> reverts the row to its last saved values and sends nothing.</li>
+                </ul>
+              </section>
+              <section>
+                <h3>What's sent</h3>
+                <ul>
+                  <li>One write per row with the whole row: <code>{ name, extraCost, sellTax }</code>. No per-field patches.</li>
+                  <li>Nothing is sent if the values match the last saved values.</li>
+                  <li>If a save for the same values is still in progress, it isn't sent again (e.g. Enter, then leaving the row).</li>
+                  <li>Responses that arrive out of order don't overwrite a newer saved state.</li>
+                  <li>Deleting a row (bin icon) sends a delete straight away.</li>
+                </ul>
+              </section>
+              <section>
+                <h3>New modifiers</h3>
+                <ul>
+                  <li>"Add modifier" adds an unsaved row and focuses its name. Only one unsaved row per option set at a time.</li>
+                  <li>It's created on the first save, which needs a name.</li>
+                  <li>A blank new row is removed when you leave it. <kbd>Esc</kbd> or the bin icon removes it without a write.</li>
+                </ul>
+              </section>
+              <section>
+                <h3>Validation (blocks the write)</h3>
+                <ul>
+                  <li>Name is required.</li>
+                  <li>Names must be unique within the option set, ignoring case and extra spaces (<code>"chili "</code> = <code>"Chili"</code>). The same name is allowed in different option sets.</li>
+                  <li>Checked on save, not while typing. The error clears as soon as the name is valid. Typed values are kept.</li>
+                  <li>If a clash is fixed by renaming or deleting the other modifier, the blocked row saves when that change is saved.</li>
+                  <li>Client-side only in the prototype. The API must enforce uniqueness too.</li>
+                </ul>
+              </section>
+              <section>
+                <h3>Feedback</h3>
+                <ul>
+                  <li>One status per option set, next to "Used by": "Saving…", then "Saved" (shown 2s, then fades) or "Couldn't save".</li>
+                  <li>Errors appear below the table in row order. The row gets a red bar.</li>
+                  <li>Option sets used by more than one product show an Undo toast for 6s after each successful save.</li>
+                  <li>Extra cost drops non-numeric characters as you type and is formatted to 2 decimals when you leave the cell. That isn't a save.</li>
+                </ul>
+              </section>
+              <section>
+                <h3>Failures</h3>
+                <ul>
+                  <li>The simulated request takes 900ms. With "Simulate save failure" on, every write fails.</li>
+                  <li>Typed values are kept and a Retry link is shown.</li>
+                  <li>Leaving the row doesn't resend a save that just failed. Enter and Retry do. <kbd>Esc</kbd> discards the change.</li>
+                </ul>
+              </section>
+              <section>
+                <h3>Name suggestions</h3>
+                <ul>
+                  <li>Typing in a Name cell lists up to 6 saved modifiers from all option sets whose name contains the text (case-insensitive). Names that start with it are listed first.</li>
+                  <li>Each shows its price, tax and option set(s). Names already in this option set are shown but can't be picked.</li>
+                  <li>Picking one (click, or <kbd>↓</kbd>/<kbd>↑</kbd> then <kbd>Enter</kbd>) copies its name, price and tax into the row. That isn't a save; the row still saves on <kbd>Enter</kbd> or leaving it.</li>
+                  <li><kbd>Esc</kbd> closes the list without reverting. <kbd>Enter</kbd> with nothing highlighted saves what you typed.</li>
+                </ul>
+              </section>
+              <section class="spec-wide">
+                <h3>Not covered by this prototype</h3>
+                <p>Drag to reorder, Create / Duplicate / Delete option set, select all, search and the "Used by" counts are mock-ups only. They don't produce writes and aren't part of this spec. The Writes panel shows every request the page would make.</p>
+              </section>
+            </div>
+          </div>
+
+          <div class="cards" id="cards"></div>
+          <div class="empty-search" id="emptySearch">No option sets or modifiers match your search.</div>
+        </main>
+      </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+    <div class="suggest" id="suggest" role="listbox" aria-label="Existing modifiers" hidden></div>
+
+    <section class="writes" id="writes" aria-label="Simulated writes">
+      <div class="writes-head">
+        <div><h2 style="display:inline">Writes</h2><span class="writes-count" id="writeCount">0 writes</span></div>
+        <button class="icon-btn" id="writesToggle" type="button" aria-expanded="true" aria-label="Collapse writes panel">
+          <svg class="collapse-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="width:16px;height:16px"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="writes-body"><ol class="write-log" id="writeLog"></ol></div>
+    </section>
+
+    <script>
+      (() => {
+        const SAVE_LATENCY = 900;
+        const SAVED_HOLD = 2000;
+        const TOAST_LIFETIME = 6000;
+        const DEFAULT_TAX = "GST";
+        const FIELDS = ["name", "extraCost", "sellTax"];
+
+        let rowSeq = 1;
+        let cardSeq = 1;
+        let requestSeq = 0;
+
+        const blank = () => ({ name: "", extraCost: "", sellTax: DEFAULT_TAX });
+        const pick = (v) => ({ name: v.name, extraCost: v.extraCost, sellTax: v.sellTax });
+        const same = (a, b) => FIELDS.every((f) => a[f] === b[f]);
+
+        const makeRow = (values, isNew = false) => ({
+          id: `row-${rowSeq++}`,
+          ...pick(values),
+          saved: isNew ? blank() : pick(values),
+          isNew,
+          creating: false,
+          awaitingSave: false,
+          error: false,
+          invalid: null,
+          pendingDelete: false,
+          lastApplied: 0,
+        });
+
+        const makeCard = ({ name, description, products, expanded, modifiers }) => ({
+          id: `set-${cardSeq++}`,
+          name,
+          description,
+          products,
+          expanded,
+          selected: false,
+          inFlight: 0,
+          latestRequest: 0,
+          outcome: "clean",
+          statusTimer: null,
+          rows: modifiers.map((m) => makeRow(m)),
+        });
+
+        const cards = [
+          makeCard({
+            name: "Banhmi selections",
+            description: "Optional, multi-select, allow instructions.",
+            products: 1,
+            expanded: true,
+            modifiers: [
+              { name: "Coriander", extraCost: "0.00", sellTax: "Free" },
+              { name: "Chicken", extraCost: "0.00", sellTax: "Free" },
+              { name: "Salad", extraCost: "0.00", sellTax: "GST" },
+              { name: "Chili", extraCost: "1.00", sellTax: "Free" },
+              { name: "Tomato sauce", extraCost: "0.00", sellTax: "GST" },
+            ],
+          }),
+          makeCard({
+            name: "Bread options",
+            description: "Required, multi-select, don't allow instructions.",
+            products: 4,
+            expanded: false,
+            modifiers: [
+              { name: "Wrap", extraCost: "0.00", sellTax: "GST" },
+              { name: "Brioche bun", extraCost: "0.00", sellTax: "GST" },
+              { name: "Regular bun (white)", extraCost: "0.00", sellTax: "GST" },
+            ],
+          }),
+          makeCard({
+            name: "Milk options",
+            description: "Optional, single-select, allow instructions.",
+            products: 6,
+            expanded: false,
+            modifiers: [
+              { name: "Full cream", extraCost: "0.00", sellTax: "GST" },
+              { name: "Oat", extraCost: "1.00", sellTax: "GST" },
+              { name: "Soy", extraCost: "0.80", sellTax: "GST" },
+              { name: "Almond", extraCost: "1.00", sellTax: "GST" },
+            ],
+          }),
+        ];
+
+        const $ = (sel, root = document) => root.querySelector(sel);
+        const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+        const cardsEl = $("#cards");
+        const searchInput = $("#searchInput");
+        const failToggle = $("#failToggle");
+        const writeLog = $("#writeLog");
+        const writeCount = $("#writeCount");
+        const toasts = $("#toasts");
+
+        const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+        const findCard = (id) => cards.find((c) => c.id === id);
+        const findRow = (card, id) => card && card.rows.find((r) => r.id === id);
+        const values = (row) => pick(row);
+        const isDirty = (row) => !same(values(row), row.saved);
+        const isBlankDraft = (row) => row.isNew && !row.creating && same(values(row), blank());
+        const rowEl = (card, row) => $(`.mod-row[data-card-id="${card.id}"][data-row-id="${row.id}"]`);
+        const errEl = (card, row) => $(`.err-item[data-card-id="${card.id}"][data-row-id="${row.id}"]`);
+
+        const ICONS = {
+          more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>',
+          chevron: (open) => `<svg class="chevron${open ? " is-open" : ""}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+          trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5h16M9.5 6.5V4.5h5v2M6.5 6.5l.8 13a1 1 0 0 0 1 .9h7.4a1 1 0 0 0 1-.9l.8-13M10 10.5v6M14 10.5v6"/></svg>',
+          handle: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></g></svg>',
+          plus: '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+          close: '<svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+        };
+
+        /* ---------- Rendering ---------- */
+
+        function rowHtml(card, row) {
+          const cls = ["mod-row", row.isNew && "is-draft", row.error && "is-error", row.invalid && "is-invalid"].filter(Boolean).join(" ");
+          const attrs = `data-card-id="${card.id}" data-row-id="${row.id}"`;
+          const label = esc(row.name || "new modifier");
+          const errId = `err-${row.id}`;
+          return `<tr class="${cls}" ${attrs}>
+              <td><span class="handle" title="Drag to reorder">${ICONS.handle}</span></td>
+              <td><input class="cell-input" data-field="name" type="text" value="${esc(row.name)}" placeholder="${row.isNew ? "e.g Full Cream" : "Name"}" aria-label="Modifier name" aria-describedby="${errId}"${row.invalid ? ' aria-invalid="true"' : ""} role="combobox" aria-autocomplete="list" aria-controls="suggest" aria-expanded="false" autocomplete="off" /></td>
+              <td><div class="cost-wrap"><span class="cur" aria-hidden="true">$</span><input class="cell-input" data-field="extraCost" type="text" inputmode="decimal" value="${esc(row.extraCost)}" placeholder="0" aria-label="Extra cost for ${label}" autocomplete="off" /></div></td>
+              <td><select class="tax-select" data-field="sellTax" aria-label="Sell tax for ${label}">
+                <option value="GST"${row.sellTax === "GST" ? " selected" : ""}>GST</option>
+                <option value="Free"${row.sellTax === "Free" ? " selected" : ""}>Free</option>
+              </select></td>
+              <td class="td-del"><button class="del-btn" type="button" tabindex="-1" data-action="delete-row" aria-label="Delete ${label}" title="Delete modifier">${ICONS.trash}</button></td>
+            </tr>`;
+        }
+
+        // Error messages sit below the table, in row order; each stays linked to its row via data-row-id.
+        function errHtml(card, row) {
+          const attrs = `data-card-id="${card.id}" data-row-id="${row.id}"`;
+          return `<p class="err-item" ${attrs}${row.error || row.invalid ? "" : " hidden"}><span class="err-copy" id="err-${row.id}" role="alert">${esc(errorCopy(row))}</span><button class="retry" type="button" data-action="retry"${row.invalid ? " hidden" : ""}>Retry</button></p>`;
+        }
+
+        const errorCopy = (row) => {
+          if (row.invalid) return row.invalid;
+          if (!row.error) return "";
+          if (row.pendingDelete) return `Couldn't delete "${row.saved.name || row.name}".`;
+          const name = row.name.trim() || row.saved.name;
+          return name ? `Couldn't save "${name}". Your changes are still here.` : "Couldn't save this modifier. Your changes are still here.";
+        };
+
+        function cardHtml(card) {
+          const name = esc(card.name);
+          return `<article class="card" id="${card.id}" data-card-id="${card.id}">
+            <header class="card-head">
+              <div class="card-lead">
+                <input class="checkbox" type="checkbox" data-action="select-card" aria-label="Select ${name}"${card.selected ? " checked" : ""} />
+                <div><h2 class="card-title">${name}</h2><div class="card-sub">${esc(card.description)}</div></div>
+              </div>
+              <div class="card-tools">
+                <span class="save-status" data-status="${card.id}" aria-live="polite"></span>
+                <span class="pill">Used by ${card.products} ${card.products === 1 ? "product" : "products"}</span>
+                <div class="menu-wrap">
+                  <button class="icon-btn" type="button" data-action="menu" aria-haspopup="true" aria-expanded="false" aria-label="More actions for ${name}">${ICONS.more}</button>
+                  <div class="menu" hidden>
+                    <button type="button" data-action="duplicate-card">Duplicate option set</button>
+                    <button type="button" class="is-destructive" data-action="delete-card">Delete option set</button>
+                  </div>
+                </div>
+                <button class="icon-btn" type="button" data-action="toggle-card" aria-expanded="${card.expanded}" aria-label="${card.expanded ? "Collapse" : "Expand"} ${name}">${ICONS.chevron(card.expanded)}</button>
+              </div>
+            </header>
+            <div class="card-body"${card.expanded ? "" : " hidden"}>
+              <div class="table-wrap">
+                <table class="mod-table" aria-label="Modifiers in ${name}">
+                  <colgroup><col class="c-handle" /><col /><col class="c-cost" /><col class="c-tax" /><col class="c-del" /></colgroup>
+                  <thead><tr><th aria-label="Reorder"></th><th>Name</th><th class="th-cost">Extra cost</th><th class="th-tax">Sell tax</th><th></th></tr></thead>
+                  <tbody>${card.rows.map((r) => rowHtml(card, r)).join("")}</tbody>
+                </table>
+              </div>
+              <div class="err-list">${card.rows.map((r) => errHtml(card, r)).join("")}</div>
+              <button class="add-mod" type="button" data-action="add-modifier">${ICONS.plus}Add modifier</button>
+            </div>
+          </article>`;
+        }
+
+        function renderAll() {
+          cardsEl.innerHTML = cards.map(cardHtml).join("");
+          cards.forEach(restoreStatus);
+          refreshBulk();
+          applySearch();
+        }
+
+        function renderCard(card) {
+          const el = document.getElementById(card.id);
+          if (el) el.outerHTML = cardHtml(card);
+          restoreStatus(card);
+          refreshBulk();
+          applySearch();
+        }
+
+        function restoreStatus(card) {
+          if (card.inFlight > 0) paintStatus(card, "saving");
+          else if (card.outcome === "failure") paintStatus(card, "error");
+        }
+
+        function syncRow(card, row) {
+          const tr = rowEl(card, row);
+          const er = errEl(card, row);
+          if (!tr) return;
+          tr.classList.toggle("is-draft", row.isNew);
+          tr.classList.toggle("is-error", row.error);
+          tr.classList.toggle("is-invalid", !!row.invalid);
+          const nameInput = $('[data-field="name"]', tr);
+          nameInput.placeholder = row.isNew ? "e.g Full Cream" : "Name";
+          if (row.invalid) nameInput.setAttribute("aria-invalid", "true");
+          else nameInput.removeAttribute("aria-invalid");
+          $(".del-btn", tr).setAttribute("aria-label", `Delete ${row.name || "new modifier"}`);
+          if (er) {
+            er.hidden = !row.error && !row.invalid;
+            $(".err-copy", er).textContent = errorCopy(row);
+            $(".retry", er).hidden = !!row.invalid;
+          }
+        }
+
+        function writeRowToInputs(card, row) {
+          const tr = rowEl(card, row);
+          if (!tr) return;
+          FIELDS.forEach((f) => { $(`[data-field="${f}"]`, tr).value = row[f]; });
+        }
+
+        function removeRowEls(card, row) {
+          const tr = rowEl(card, row);
+          const er = errEl(card, row);
+          if (tr) tr.remove();
+          if (er) er.remove();
+        }
+
+        /* ---------- Card status indicator ---------- */
+
+        function paintStatus(card, state) {
+          const el = $(`[data-status="${card.id}"]`);
+          if (!el) return;
+          clearTimeout(card.statusTimer);
+          el.className = "save-status";
+          el.textContent = "";
+          if (state === "saving") {
+            el.textContent = "Saving…";
+          } else if (state === "saved") {
+            el.textContent = "Saved";
+            el.classList.add("is-saved");
+            card.statusTimer = setTimeout(() => {
+              el.classList.add("is-fading");
+              card.statusTimer = setTimeout(() => {
+                if (card.outcome === "success" && card.inFlight === 0) paintStatus(card, "clean");
+              }, 400);
+            }, SAVED_HOLD);
+          } else if (state === "error") {
+            el.textContent = "Couldn't save";
+            el.classList.add("is-error");
+          }
+        }
+
+        /* ---------- Write log ---------- */
+
+        const clock = () => new Date().toLocaleTimeString("en-AU", { hour12: false });
+
+        function logWrite(card, label, snapshot, op) {
+          requestSeq += 1;
+          const id = requestSeq;
+          const fields = op === "delete" ? "{ id, deleted: true }" : `{ ${FIELDS.join(", ")} }`;
+          const payload = op === "delete" ? `DELETE  id: "${snapshot.id}"` : `name: "${snapshot.name}", extraCost: "${snapshot.extraCost}", sellTax: "${snapshot.sellTax}"`;
+          const li = document.createElement("li");
+          li.className = "write";
+          li.innerHTML = `<div class="write-top"><time>${clock()}</time><span class="write-ctx">${esc(card.name)} › ${esc(label)}  ${esc(fields)}</span><span class="write-res" data-req="${id}">pending</span></div><code title="${esc(payload)}">${esc(payload)}</code>`;
+          writeLog.prepend(li);
+          writeCount.textContent = `${id} ${id === 1 ? "write" : "writes"}`;
+          return id;
+        }
+
+        function markWrite(id, ok) {
+          const el = $(`[data-req="${id}"]`);
+          if (!el) return;
+          el.textContent = ok ? "200 OK" : "failed";
+          el.classList.add(ok ? "ok" : "fail");
+        }
+
+        /* ---------- Toast ---------- */
+
+        function toast(message, onUndo) {
+          toasts.replaceChildren();
+          const el = document.createElement("div");
+          el.className = "toast";
+          el.innerHTML = `<span class="toast-msg">${esc(message)}</span>${onUndo ? '<button class="toast-undo" type="button">Undo</button>' : ""}<button class="toast-x" type="button" aria-label="Dismiss">${ICONS.close}</button>`;
+          const close = () => { clearTimeout(timer); el.remove(); };
+          const timer = setTimeout(close, TOAST_LIFETIME);
+          $(".toast-x", el).addEventListener("click", close);
+          if (onUndo) $(".toast-undo", el).addEventListener("click", () => { close(); onUndo(); });
+          toasts.append(el);
+        }
+
+        const money = (v) => `$${(Number.parseFloat(v) || 0).toFixed(2)}`;
+
+        function blastMessage(prev, next, products) {
+          const tail = `applies to ${products} products.`;
+          if (!prev.name) return `${next.name} added — ${tail}`;
+          const changed = FIELDS.filter((f) => prev[f] !== next[f]);
+          if (changed.length === 1 && changed[0] === "extraCost") return `${prev.name} extra cost set to ${money(next.extraCost)} — ${tail}`;
+          if (changed.length === 1 && changed[0] === "sellTax") return `${prev.name} sell tax set to ${next.sellTax} — ${tail}`;
+          if (changed.length === 1 && changed[0] === "name") return `${prev.name} renamed to ${next.name} — ${tail}`;
+          return `${next.name} updated — ${tail}`;
+        }
+
+        /* ---------- Save mechanics ---------- */
+
+        function simulateRequest() {
+          const fail = failToggle.checked;
+          return new Promise((resolve, reject) => {
+            setTimeout(() => (fail ? reject(new Error("Simulated failure")) : resolve()), SAVE_LATENCY);
+          });
+        }
+
+        function normaliseCost(card, row) {
+          const raw = row.extraCost.trim();
+          const n = Number.parseFloat(raw);
+          const next = raw === "" ? "0.00" : Number.isFinite(n) ? n.toFixed(2) : raw;
+          if (next !== row.extraCost) {
+            row.extraCost = next;
+            const tr = rowEl(card, row);
+            if (tr) $('[data-field="extraCost"]', tr).value = next;
+          }
+        }
+
+        const nameKey = (name) => name.trim().replace(/\s+/g, " ").toLowerCase();
+
+        // Names must be unique within an option set (case- and whitespace-insensitive).
+        function validationError(card, row) {
+          const key = nameKey(row.name);
+          if (!key) return "Enter a name for this modifier.";
+          const clash = card.rows.find((r) => r !== row && !r.pendingDelete && nameKey(r.name) === key);
+          if (clash) return `"${clash.name.trim()}" is already in ${card.name}. Use a different name.`;
+          return null;
+        }
+
+        // Clear errors that no longer apply (e.g. the clashing row was renamed or deleted).
+        // The row doesn't save here; it's queued and saves on the next Enter / row exit (see flushResolved).
+        function revalidate(card, except) {
+          card.rows.forEach((r) => {
+            if (r === except || !r.invalid || validationError(card, r)) return;
+            r.invalid = null;
+            r.awaitingSave = isDirty(r);
+            syncRow(card, r);
+          });
+        }
+
+        // Rows whose save was blocked by a name clash that has since been resolved get saved
+        // when the merchant commits the change that resolved it.
+        function flushResolved(card, except) {
+          const active = document.activeElement && document.activeElement.closest(".mod-row");
+          card.rows.forEach((r) => {
+            if (r === except || !r.awaitingSave || active === rowEl(card, r)) return;
+            r.awaitingSave = false;
+            commitRow(card, r);
+          });
+        }
+
+        function commitRow(card, row, { showUndo = true, explicit = false } = {}) {
+          if (!row || row.pendingDelete) return;
+          row.awaitingSave = false;
+          if (row.isNew && !row.name.trim()) return; // a draft only becomes a record once it has a name
+          normaliseCost(card, row);
+          if (!isDirty(row)) {
+            if (row.invalid) { row.invalid = null; syncRow(card, row); }
+            flushResolved(card, row);
+            return;
+          }
+          // Validation blocks the write entirely: no request, values stay as typed.
+          row.invalid = validationError(card, row);
+          syncRow(card, row);
+          if (row.invalid) return;
+          flushResolved(card, row);
+          // Don't resend values that are already on their way (e.g. Enter, then leaving the row).
+          if (row.inFlight && same(values(row), row.inFlight)) return;
+          // Leaving the row never re-sends a payload that just failed; Enter and Retry do.
+          if (!explicit && row.error && row.failedSnapshot && same(values(row), row.failedSnapshot)) return;
+          const snapshot = values(row);
+          const previous = pick(row.saved);
+          const created = row.isNew && !row.creating;
+          if (created) row.creating = true;
+          send(card, row, snapshot, "save", { previous, created, showUndo });
+        }
+
+        function deleteRow(card, row) {
+          row.pendingDelete = true;
+          row.error = false;
+          syncRow(card, row);
+          send(card, row, { id: row.id }, "delete", {});
+        }
+
+        function send(card, row, snapshot, op, meta) {
+          const label = op === "delete" ? row.saved.name || row.name : snapshot.name;
+          const id = logWrite(card, label, snapshot, op);
+          if (op === "save") { row.inFlight = pick(snapshot); row.inFlightId = id; }
+          card.inFlight += 1;
+          card.latestRequest = id;
+          card.outcome = "pending";
+          paintStatus(card, "saving");
+
+          const settle = (ok) => {
+            if (row.inFlightId === id) row.inFlight = null;
+            card.inFlight -= 1;
+            markWrite(id, ok);
+            if (card.latestRequest === id) card.outcome = ok ? "success" : "failure";
+            if (card.inFlight === 0) paintStatus(card, card.outcome === "failure" ? "error" : "saved");
+          };
+
+          simulateRequest().then(
+            () => {
+              if (op === "delete") {
+                card.rows = card.rows.filter((r) => r !== row);
+                removeRowEls(card, row);
+                revalidate(card);
+                flushResolved(card);
+                settle(true);
+                return;
+              }
+              if (id > row.lastApplied) {
+                row.saved = pick(snapshot);
+                row.lastApplied = id;
+              }
+              if (meta.created) { row.isNew = false; row.creating = false; }
+              row.error = false;
+              syncRow(card, row);
+              settle(true);
+              if (meta.showUndo && card.products > 1) {
+                toast(blastMessage(meta.previous, snapshot, card.products), () => undo(card, row, meta));
+              }
+            },
+            () => {
+              if (meta.created) row.creating = false;
+              if (op === "save") row.failedSnapshot = pick(snapshot);
+              row.error = true;
+              syncRow(card, row);
+              settle(false);
+            },
+          );
+        }
+
+        function undo(card, row, meta) {
+          if (!card.rows.includes(row)) return;
+          if (meta.created) {
+            deleteRow(card, row);
+            return;
+          }
+          Object.assign(row, pick(meta.previous));
+          row.error = false;
+          writeRowToInputs(card, row);
+          syncRow(card, row);
+          commitRow(card, row, { showUndo: false });
+        }
+
+        function revertRow(card, row) {
+          if (row.isNew) {
+            discardDraft(card, row);
+            const add = $(`#${card.id} [data-action="add-modifier"]`);
+            if (add) add.focus();
+            return;
+          }
+          Object.assign(row, pick(row.saved));
+          row.error = false;
+          row.invalid = null;
+          row.pendingDelete = false;
+          writeRowToInputs(card, row);
+          syncRow(card, row);
+          revalidate(card, row);
+          flushResolved(card, row);
+          if (card.inFlight === 0 && card.outcome === "failure" && !card.rows.some((r) => r.error)) {
+            card.outcome = "clean";
+            paintStatus(card, "clean");
+          }
+        }
+
+        function discardDraft(card, row) {
+          card.rows = card.rows.filter((r) => r !== row);
+          removeRowEls(card, row);
+          revalidate(card);
+          flushResolved(card);
+          if (card.outcome === "failure" && card.inFlight === 0 && !card.rows.some((r) => r.error)) {
+            card.outcome = "clean";
+            paintStatus(card, "clean");
+          }
+        }
+
+        function addDraft(card) {
+          if (!card.expanded) {
+            card.expanded = true;
+            renderCard(card);
+          }
+          let draft = card.rows.find((r) => r.isNew && !r.creating);
+          if (!draft) {
+            draft = makeRow(blank(), true);
+            card.rows.push(draft);
+            $(`#${card.id} tbody`).insertAdjacentHTML("beforeend", rowHtml(card, draft));
+            $(`#${card.id} .err-list`).insertAdjacentHTML("beforeend", errHtml(card, draft));
+          }
+          $('[data-field="name"]', rowEl(card, draft)).focus();
+        }
+
+        /* ---------- Events ---------- */
+
+        const locate = (target) => {
+          const el = target.closest("[data-row-id]");
+          const cardEl = target.closest(".card");
+          const card = cardEl && findCard(cardEl.dataset.cardId);
+          return { card, row: el ? findRow(card, el.dataset.rowId) : null };
+        };
+
+        function onFieldEdit(event) {
+          const field = event.target.dataset.field;
+          if (!field) return;
+          const { card, row } = locate(event.target);
+          if (!row) return;
+          if (field === "extraCost") {
+            const cleaned = event.target.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+            if (cleaned !== event.target.value) event.target.value = cleaned;
+          }
+          row[field] = event.target.value;
+          if (field === "name") {
+            // Clear the message as soon as the name becomes valid; only show new errors on commit.
+            if (row.invalid && !validationError(card, row)) {
+              row.invalid = null;
+              syncRow(card, row);
+            }
+            revalidate(card, row);
+            updateSuggest(card, row, event.target);
+          }
+        }
+
+        /* ---------- Existing-modifier suggestions ---------- */
+
+        const suggestEl = $("#suggest");
+        const SUGGEST_LIMIT = 6;
+        let suggest = null; // { card, row, input, items, active }
+
+        // Every saved modifier across all option sets, grouped by identical name + price + tax.
+        function modifierLibrary(exceptRow) {
+          const byValues = new Map();
+          cards.forEach((c) => c.rows.forEach((r) => {
+            if (r === exceptRow || r.pendingDelete || !r.saved.name.trim()) return;
+            const v = r.saved;
+            const id = `${nameKey(v.name)}|${v.extraCost}|${v.sellTax}`;
+            if (!byValues.has(id)) byValues.set(id, { ...pick(v), sets: [] });
+            const entry = byValues.get(id);
+            if (!entry.sets.includes(c.name)) entry.sets.push(c.name);
+          }));
+          return [...byValues.values()];
+        }
+
+        function findSuggestions(card, row, query) {
+          const q = nameKey(query);
+          if (!q) return [];
+          const taken = new Set(card.rows.filter((r) => r !== row && !r.pendingDelete).map((r) => nameKey(r.name)));
+          return modifierLibrary(row)
+            .map((m) => ({ ...m, key: nameKey(m.name), at: nameKey(m.name).indexOf(q) }))
+            .filter((m) => m.at >= 0)
+            .map((m) => ({ ...m, taken: taken.has(m.key) }))
+            .sort((a, b) => a.taken - b.taken || (a.at !== 0) - (b.at !== 0) || a.name.localeCompare(b.name))
+            .slice(0, SUGGEST_LIMIT);
+        }
+
+        function highlight(name, query) {
+          const q = query.trim().replace(/\s+/g, " ").toLowerCase();
+          const i = name.toLowerCase().indexOf(q);
+          if (!q || i < 0) return esc(name);
+          return `${esc(name.slice(0, i))}<mark>${esc(name.slice(i, i + q.length))}</mark>${esc(name.slice(i + q.length))}`;
+        }
+
+        function updateSuggest(card, row, input) {
+          const items = findSuggestions(card, row, input.value);
+          if (!items.length) { closeSuggest(); return; }
+          suggest = { card, row, input, items, active: -1 };
+          const setsLabel = (m) => (m.taken ? `Already in ${card.name}` : `In ${m.sets.join(", ")}`);
+          suggestEl.innerHTML = `<div class="suggest-head" aria-hidden="true">Existing modifiers</div>${items.map((m, i) => `
+            <div class="suggest-opt" id="suggest-${i}" role="option" aria-selected="false"${m.taken ? ' aria-disabled="true"' : ""} data-index="${i}">
+              <span class="suggest-name">${highlight(m.name, input.value)}</span>
+              <span class="suggest-meta">$${esc(m.extraCost || "0.00")} · ${esc(m.sellTax)}</span>
+              <span class="suggest-sets">${esc(setsLabel(m))}</span>
+            </div>`).join("")}`;
+          suggestEl.hidden = false;
+          input.setAttribute("aria-expanded", "true");
+          input.removeAttribute("aria-activedescendant");
+          positionSuggest();
+        }
+
+        function positionSuggest() {
+          if (!suggest) return;
+          if (!suggest.input.isConnected) { closeSuggest(); return; }
+          const rect = suggest.input.getBoundingClientRect();
+          suggestEl.style.width = `${Math.max(rect.width, 320)}px`;
+          const height = suggestEl.offsetHeight;
+          const flip = rect.bottom + 4 + height > window.innerHeight - 8 && rect.top - 4 - height > 8;
+          suggestEl.style.left = `${rect.left}px`;
+          suggestEl.style.top = `${flip ? rect.top - 4 - height : rect.bottom + 4}px`;
+        }
+
+        function closeSuggest() {
+          if (suggest) {
+            suggest.input.setAttribute("aria-expanded", "false");
+            suggest.input.removeAttribute("aria-activedescendant");
+          }
+          suggest = null;
+          suggestEl.hidden = true;
+          suggestEl.innerHTML = "";
+        }
+
+        function moveActive(step) {
+          const { items } = suggest;
+          let i = suggest.active;
+          for (let n = 0; n < items.length; n += 1) {
+            i = ((((i + 1 + step) % (items.length + 1)) + items.length + 1) % (items.length + 1)) - 1; // -1 = back to the typed text
+            if (i === -1 || !items[i].taken) break;
+          }
+          suggest.active = i;
+          $$(".suggest-opt", suggestEl).forEach((el, idx) => {
+            el.classList.toggle("is-active", idx === i);
+            el.setAttribute("aria-selected", String(idx === i));
+          });
+          if (i >= 0) {
+            suggest.input.setAttribute("aria-activedescendant", `suggest-${i}`);
+            $(`#suggest-${i}`).scrollIntoView({ block: "nearest" });
+          } else {
+            suggest.input.removeAttribute("aria-activedescendant");
+          }
+        }
+
+        // Picking a suggestion fills the row with that modifier's values. It isn't saved until Enter / leaving the row.
+        function chooseSuggestion(index) {
+          const { card, row, input, items } = suggest;
+          const m = items[index];
+          if (!m || m.taken) return;
+          Object.assign(row, pick(m));
+          writeRowToInputs(card, row);
+          if (row.invalid && !validationError(card, row)) row.invalid = null;
+          syncRow(card, row);
+          revalidate(card, row);
+          closeSuggest();
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        suggestEl.addEventListener("mousedown", (event) => event.preventDefault()); // keep focus in the name cell
+        suggestEl.addEventListener("click", (event) => {
+          const opt = event.target.closest(".suggest-opt");
+          if (opt && suggest) chooseSuggestion(Number(opt.dataset.index));
+        });
+        suggestEl.addEventListener("mousemove", (event) => {
+          const opt = event.target.closest(".suggest-opt");
+          if (!opt || !suggest || opt.getAttribute("aria-disabled") === "true") return;
+          const i = Number(opt.dataset.index);
+          if (i !== suggest.active) moveActive(i - suggest.active);
+        });
+        window.addEventListener("scroll", positionSuggest, true);
+        window.addEventListener("resize", positionSuggest);
+
+        // Returns true when the key was handled by the open suggestion list.
+        function handleSuggestKey(event) {
+          if (!suggest || suggest.input !== event.target) return false;
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            moveActive(event.key === "ArrowDown" ? 1 : -1);
+            return true;
+          }
+          if (event.key === "Enter" && suggest.active >= 0) {
+            event.preventDefault();
+            chooseSuggestion(suggest.active);
+            return true;
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closeSuggest();
+            return true;
+          }
+          if (event.key === "Enter" || event.key === "Tab") closeSuggest();
+          return false;
+        }
+
+        cardsEl.addEventListener("input", onFieldEdit);
+        cardsEl.addEventListener("focusin", (event) => {
+          if (event.target.dataset.field === "extraCost") event.target.select();
+        });
+        cardsEl.addEventListener("change", (event) => {
+          if (event.target.dataset.field === "sellTax") onFieldEdit(event);
+          if (event.target.dataset.action === "select-card") {
+            locate(event.target).card.selected = event.target.checked;
+            refreshBulk();
+          }
+        });
+
+        // Row-level commit: moving between cells of the same row never saves.
+        cardsEl.addEventListener("focusout", (event) => {
+          if (!event.target.dataset.field) return;
+          if (suggest && suggest.input === event.target) closeSuggest();
+          const { card, row } = locate(event.target);
+          if (!row || !card.rows.includes(row)) return;
+          const next = event.relatedTarget;
+          const nextRowEl = next && next.closest("[data-row-id]");
+          if (nextRowEl && nextRowEl.dataset.rowId === row.id) {
+            // Finished with the price but still in the row: tidy its formatting (no save).
+            if (event.target.dataset.field === "extraCost") {
+              if (row.extraCost !== "" || !row.isNew) normaliseCost(card, row);
+            }
+            return;
+          }
+          if (isBlankDraft(row)) {
+            const goingToAdd = next && next.dataset.action === "add-modifier" && next.closest(".card") === document.getElementById(card.id);
+            if (!goingToAdd) discardDraft(card, row);
+            return;
+          }
+          commitRow(card, row);
+        });
+
+        cardsEl.addEventListener("keydown", (event) => {
+          if (!event.target.dataset.field) return;
+          if (handleSuggestKey(event)) return;
+          const { card, row } = locate(event.target);
+          if (!row) return;
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commitRow(card, row, { explicit: true });
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            revertRow(card, row);
+          }
+        });
+
+        // Keep focus in the row when clicking its own delete icon, so leaving doesn't save first.
+        cardsEl.addEventListener("mousedown", (event) => {
+          const del = event.target.closest('[data-action="delete-row"]');
+          if (del && document.activeElement && del.closest("tr").contains(document.activeElement)) event.preventDefault();
+        });
+
+        cardsEl.addEventListener("click", (event) => {
+          const btn = event.target.closest("button[data-action]");
+          if (!btn) return;
+          const { card, row } = locate(btn);
+          if (!card) return;
+          const action = btn.dataset.action;
+
+          if (action === "toggle-card") {
+            card.expanded = !card.expanded;
+            renderCard(card);
+          } else if (action === "menu") {
+            const menu = btn.nextElementSibling;
+            const willOpen = menu.hidden;
+            closeMenus();
+            menu.hidden = !willOpen;
+            btn.setAttribute("aria-expanded", String(willOpen));
+          } else if (action === "add-modifier") {
+            addDraft(card);
+          } else if (action === "delete-row" && row) {
+            if (row.isNew && !row.creating) discardDraft(card, row);
+            else deleteRow(card, row);
+          } else if (action === "retry" && row) {
+            if (row.pendingDelete) deleteRow(card, row);
+            else commitRow(card, row, { explicit: true });
+          } else if (action === "duplicate-card") {
+            const copy = makeCard({ name: `${card.name} (copy)`, description: card.description, products: 0, expanded: false, modifiers: card.rows.filter((r) => !r.isNew).map((r) => r.saved) });
+            cards.splice(cards.indexOf(card) + 1, 0, copy);
+            renderAll();
+          } else if (action === "delete-card") {
+            cards.splice(cards.indexOf(card), 1);
+            renderAll();
+          }
+        });
+
+        function closeMenus() {
+          $$(".menu").forEach((m) => { m.hidden = true; });
+          $$('[data-action="menu"]').forEach((b) => b.setAttribute("aria-expanded", "false"));
+        }
+        document.addEventListener("click", (e) => {
+          if (e.target.closest('a[href="#"]')) e.preventDefault();
+          if (!e.target.closest(".menu-wrap")) closeMenus();
+        });
+
+        function refreshBulk() {
+          const n = cards.filter((c) => c.selected).length;
+          $("#selectedCount").textContent = `${n} selected`;
+          const all = $("#selectAll");
+          all.checked = cards.length > 0 && n === cards.length;
+          all.indeterminate = n > 0 && n < cards.length;
+        }
+
+        function applySearch() {
+          const q = searchInput.value.trim().toLowerCase();
+          let shown = 0;
+          cards.forEach((card) => {
+            const el = document.getElementById(card.id);
+            if (!el) return;
+            const hit = !q || card.name.toLowerCase().includes(q) || card.rows.some((r) => r.name.toLowerCase().includes(q));
+            el.hidden = !hit;
+            if (hit) shown += 1;
+          });
+          $("#emptySearch").classList.toggle("is-visible", shown === 0);
+        }
+
+        $("#selectAll").addEventListener("change", (e) => {
+          cards.forEach((c) => { c.selected = e.target.checked; });
+          $$('[data-action="select-card"]').forEach((cb) => { cb.checked = e.target.checked; });
+          refreshBulk();
+        });
+        $("#createSet").addEventListener("click", () => {
+          const card = makeCard({ name: "New option set", description: "Optional, single-select, don't allow instructions.", products: 0, expanded: true, modifiers: [] });
+          cards.unshift(card);
+          renderAll();
+          addDraft(card);
+        });
+        searchInput.addEventListener("input", applySearch);
+        failToggle.addEventListener("change", () => { $("#failState").textContent = failToggle.checked ? "on" : "off"; });
+        $("#specToggle").addEventListener("click", (e) => {
+          const open = e.currentTarget.getAttribute("aria-expanded") !== "true";
+          e.currentTarget.setAttribute("aria-expanded", String(open));
+          $("#saveSpec").hidden = !open;
+        });
+        $("#writesToggle").addEventListener("click", (e) => {
+          const collapsed = $("#writes").classList.toggle("is-collapsed");
+          e.currentTarget.setAttribute("aria-expanded", String(!collapsed));
+          e.currentTarget.setAttribute("aria-label", collapsed ? "Expand writes panel" : "Collapse writes panel");
+        });
+
+        renderAll();
+      })();
+    </script>
+  </body>
+</html>
